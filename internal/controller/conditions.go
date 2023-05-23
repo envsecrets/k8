@@ -10,7 +10,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-func (r *ManagerReconciler) SetSecretsSyncReadyCondition(ctx context.Context, manager *secretsv1.Manager, updateSecretsError error) {
+func (r *ManagerReconciler) SetSecretsSyncReadyCondition(ctx context.Context, manager *secretsv1.EnvSecretsManager, updateSecretsError error) {
 	log := log.FromContext(ctx)
 	if manager.Status.Conditions == nil {
 		manager.Status.Conditions = []metav1.Condition{}
@@ -42,7 +42,7 @@ func (r *ManagerReconciler) SetSecretsSyncReadyCondition(ctx context.Context, ma
 	}
 }
 
-func (r *ManagerReconciler) SetDeploymentReloadReadyCondition(ctx context.Context, manager *secretsv1.Manager, numDeployments int, deploymentError error) {
+func (r *ManagerReconciler) SetDeploymentReloadReadyCondition(ctx context.Context, manager *secretsv1.EnvSecretsManager, numDeployments int, deploymentError error) {
 	log := log.FromContext(ctx)
 	if manager.Status.Conditions == nil {
 		manager.Status.Conditions = []metav1.Condition{}

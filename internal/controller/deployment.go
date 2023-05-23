@@ -35,8 +35,8 @@ const (
 	deploymentRestartAnnotation            = "k8.envsecrets.com/reload"
 )
 
-// Reconciles deployments marked with the restart annotation and that use the specified Manager.
-func (r *ManagerReconciler) ReconcileDeploymentsUsingSecret(ctx context.Context, manager secretsv1.Manager) (int, error) {
+// Reconciles deployments marked with the restart annotation and that use the specified EnvSecretsManager.
+func (r *ManagerReconciler) ReconcileDeploymentsUsingSecret(ctx context.Context, manager secretsv1.EnvSecretsManager) (int, error) {
 	log := log.FromContext(ctx)
 	namespace := manager.Namespace
 	if manager.Spec.ManagedSecretRef.Namespace != "" {
@@ -77,9 +77,9 @@ func (r *ManagerReconciler) ReconcileDeploymentsUsingSecret(ctx context.Context,
 	return len(deploymentList.Items), nil
 }
 
-// Evaluates whether or not the deployment is using the specified Manager.
-// Specifically, a deployment is using a Manager if it references it using `envFrom`, `secretKeyRef` or `volumes`.
-func (r *ManagerReconciler) IsDeploymentUsingSecret(deployment v1.Deployment, manager secretsv1.Manager) bool {
+// Evaluates whether or not the deployment is using the specified EnvSecretsManager.
+// Specifically, a deployment is using a EnvSecretsManager if it references it using `envFrom`, `secretKeyRef` or `volumes`.
+func (r *ManagerReconciler) IsDeploymentUsingSecret(deployment v1.Deployment, manager secretsv1.EnvSecretsManager) bool {
 	managedSecretName := manager.Spec.ManagedSecretRef.Name
 	for _, container := range deployment.Spec.Template.Spec.Containers {
 		for _, envFrom := range container.EnvFrom {

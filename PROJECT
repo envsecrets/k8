@@ -14,7 +14,7 @@ resources:
   controller: true
   domain: k8.envsecrets.dev
   group: batch
-  kind: Manager
+  kind: EnvSecretsManager
   path: github.com/envsecrets/k8/api/v1
   version: v1
 version: "3"

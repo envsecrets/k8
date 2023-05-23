@@ -102,11 +102,11 @@ type APIError struct {
 	Message string
 }
 
-// GetAPICredentials generates an APICredentials from a Manager
-func GetAPICredentials(manager secretsv1.Manager, token string) *APICredentials {
+// GetAPICredentials generates an APICredentials from a EnvSecretsManager
+func GetAPICredentials(manager secretsv1.EnvSecretsManager, token string) *APICredentials {
 	return &APICredentials{
 		Host: manager.Spec.Host,
-		//VerifyTLS: Manager.Spec.VerifyTLS,
+		//VerifyTLS: EnvSecretsManager.Spec.VerifyTLS,
 		APIKey: token,
 	}
 }
@@ -125,15 +125,15 @@ func (r *ManagerReconciler) GetReferencedSecret(ctx context.Context, ref secrets
 	return existingKubeSecret, err
 }
 
-// GetEnviromentToken gets the envsecrets enviroment token referenced by the Manager
-func (r *ManagerReconciler) GetEnviromentToken(ctx context.Context, Manager secretsv1.Manager) (string, error) {
-	tokenSecret, err := r.GetReferencedSecret(ctx, Manager.Spec.EnvTokenRef)
+// GetEnviromentToken gets the envsecrets enviroment token referenced by the EnvSecretsManager
+func (r *ManagerReconciler) GetEnviromentToken(ctx context.Context, EnvSecretsManager secretsv1.EnvSecretsManager) (string, error) {
+	tokenSecret, err := r.GetReferencedSecret(ctx, EnvSecretsManager.Spec.EnvTokenRef)
 	if err != nil {
 		return "", fmt.Errorf("Failed to fetch token secret reference: %w", err)
 	}
 	token := tokenSecret.Data[kubeSecretServiceTokenKey]
 	if token == nil {
-		return "", fmt.Errorf("Could not find secret key %s.%s", Manager.Spec.EnvTokenRef.Name, kubeSecretServiceTokenKey)
+		return "", fmt.Errorf("Could not find secret key %s.%s", EnvSecretsManager.Spec.EnvTokenRef.Name, kubeSecretServiceTokenKey)
 	}
 	return string(token), nil
 }
@@ -153,7 +153,7 @@ func GetKubeSecretData(data map[string]Payload) (result map[string][]byte, err e
 }
 
 // CreateManagedSecret creates a managed Kubernetes secret
-func (r *ManagerReconciler) CreateManagedSecret(ctx context.Context, Manager secretsv1.Manager, result map[string]Payload) error {
+func (r *ManagerReconciler) CreateManagedSecret(ctx context.Context, EnvSecretsManager secretsv1.EnvSecretsManager, result map[string]Payload) error {
 	secretData, dataErr := GetKubeSecretData(result)
 	if dataErr != nil {
 		return fmt.Errorf("Failed to build Kubernetes secret data: %w", dataErr)
@@ -161,10 +161,10 @@ func (r *ManagerReconciler) CreateManagedSecret(ctx context.Context, Manager sec
 
 	newKubeSecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      Manager.Spec.ManagedSecretRef.Name,
-			Namespace: Manager.Spec.ManagedSecretRef.Namespace,
+			Name:      EnvSecretsManager.Spec.ManagedSecretRef.Name,
+			Namespace: EnvSecretsManager.Spec.ManagedSecretRef.Namespace,
 			Labels: map[string]string{
-				"k8.envsecrets.com/subtype": "Manager",
+				"k8.envsecrets.com/subtype": "EnvSecretsManager",
 			},
 		},
 		Type: "Opaque",
@@ -179,7 +179,7 @@ func (r *ManagerReconciler) CreateManagedSecret(ctx context.Context, Manager sec
 }
 
 // UpdateManagedSecret updates a managed Kubernetes secret
-func (r *ManagerReconciler) UpdateManagedSecret(ctx context.Context, secret corev1.Secret, Manager secretsv1.Manager, result map[string]Payload) error {
+func (r *ManagerReconciler) UpdateManagedSecret(ctx context.Context, secret corev1.Secret, EnvSecretsManager secretsv1.EnvSecretsManager, result map[string]Payload) error {
 	secretData, dataErr := GetKubeSecretData(result)
 	if dataErr != nil {
 		return fmt.Errorf("Failed to build Kubernetes secret data: %w", dataErr)
@@ -193,31 +193,31 @@ func (r *ManagerReconciler) UpdateManagedSecret(ctx context.Context, secret core
 	return nil
 }
 
-// UpdateSecret updates a Kubernetes secret using the configuration specified in a Manager
-func (r *ManagerReconciler) UpdateSecret(ctx context.Context, Manager secretsv1.Manager) error {
+// UpdateSecret updates a Kubernetes secret using the configuration specified in a EnvSecretsManager
+func (r *ManagerReconciler) UpdateSecret(ctx context.Context, EnvSecretsManager secretsv1.EnvSecretsManager) error {
 	log := log.FromContext(ctx)
 
 	log.Info("Updating Kubernetes secret")
-	if Manager.Spec.ManagedSecretRef.Namespace == "" {
-		Manager.Spec.ManagedSecretRef.Namespace = Manager.Namespace
+	if EnvSecretsManager.Spec.ManagedSecretRef.Namespace == "" {
+		EnvSecretsManager.Spec.ManagedSecretRef.Namespace = EnvSecretsManager.Namespace
 	}
-	if Manager.Spec.EnvTokenRef.Namespace == "" {
-		Manager.Spec.EnvTokenRef.Namespace = Manager.Namespace
+	if EnvSecretsManager.Spec.EnvTokenRef.Namespace == "" {
+		EnvSecretsManager.Spec.EnvTokenRef.Namespace = EnvSecretsManager.Namespace
 	}
 
-	token, err := r.GetEnviromentToken(ctx, Manager)
+	token, err := r.GetEnviromentToken(ctx, EnvSecretsManager)
 	if err != nil {
 		return fmt.Errorf("Failed to load envsecrets enviroment Token: %w", err)
 	}
 
-	existingKubeSecret, err := r.GetReferencedSecret(ctx, Manager.Spec.ManagedSecretRef)
+	existingKubeSecret, err := r.GetReferencedSecret(ctx, EnvSecretsManager.Spec.ManagedSecretRef)
 	if err != nil && !errors.IsNotFound(err) {
 		return fmt.Errorf("Failed to fetch managed secret reference: %w", err)
 	}
 
 	log.Info("Fetching secrets from server")
 
-	result, apiErr := GetValues(ctx, GetAPICredentials(Manager, token), &GetValuesOptions{})
+	result, apiErr := GetValues(ctx, GetAPICredentials(EnvSecretsManager, token), &GetValuesOptions{})
 	if apiErr != nil {
 		return apiErr
 	}
@@ -225,9 +225,9 @@ func (r *ManagerReconciler) UpdateSecret(ctx context.Context, Manager secretsv1.
 	log.Info("[/] Secrets have been updated with version ", result.Version)
 
 	if existingKubeSecret == nil {
-		return r.CreateManagedSecret(ctx, Manager, result.Data)
+		return r.CreateManagedSecret(ctx, EnvSecretsManager, result.Data)
 	} else {
-		return r.UpdateManagedSecret(ctx, *existingKubeSecret, Manager, result.Data)
+		return r.UpdateManagedSecret(ctx, *existingKubeSecret, EnvSecretsManager, result.Data)
 	}
 }
 

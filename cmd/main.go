@@ -73,8 +73,8 @@ func main() {
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "6ad92868.k8.envsecrets.dev",
 		// LeaderElectionReleaseOnCancel defines if the leader should step down voluntarily
-		// when the Manager ends. This requires the binary to immediately end when the
-		// Manager is stopped, otherwise, this setting is unsafe. Setting this significantly
+		// when the EnvSecretsManager ends. This requires the binary to immediately end when the
+		// EnvSecretsManager is stopped, otherwise, this setting is unsafe. Setting this significantly
 		// speeds up voluntary leader transitions as the new leader don't have to wait
 		// LeaseDuration time first.
 		//
@@ -93,7 +93,7 @@ func main() {
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Manager")
+		setupLog.Error(err, "unable to create controller", "controller", "EnvSecretsManager")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

@@ -1,5 +1,5 @@
 apiVersion: batch.k8.envsecrets.dev/v1
-kind: Manager
+kind: EnvSecretsManager
 metadata:
   labels:
     app.kubernetes.io/name: manager

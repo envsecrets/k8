@@ -25,7 +25,7 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// ManagerSpec defines the desired state of Manager
+// ManagerSpec defines the desired state of EnvSecretsManager
 type ManagerSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
@@ -55,7 +55,7 @@ type SecretReference struct {
 	Namespace string `json:"namespace,omitempty"`
 }
 
-// ManagerStatus defines the observed state of Manager
+// ManagerStatus defines the observed state of EnvSecretsManager
 type ManagerStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
@@ -67,7 +67,7 @@ type ManagerStatus struct {
 	Conditions []metav1.Condition `json:"conditions"`
 }
 
-// SecretStatus defines the observed state of our secrets Manager
+// SecretStatus defines the observed state of our secrets EnvSecretsManager
 type SecretStatus struct {
 	Conditions []metav1.Condition `json:"conditions"`
 }
@@ -75,8 +75,8 @@ type SecretStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// Manager is the Schema for the managers API
-type Manager struct {
+// EnvSecretsManager is the Schema for the managers API
+type EnvSecretsManager struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
@@ -84,19 +84,19 @@ type Manager struct {
 	Status ManagerStatus `json:"status,omitempty"`
 }
 
-func (m Manager) GetNamespacedName() string {
+func (m EnvSecretsManager) GetNamespacedName() string {
 	return fmt.Sprintf("%s/%s", m.Namespace, m.Name)
 }
 
 //+kubebuilder:object:root=true
 
-// ManagerList contains a list of Manager
+// ManagerList contains a list of EnvSecretsManager
 type ManagerList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Manager `json:"items"`
+	Items           []EnvSecretsManager `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&Manager{}, &ManagerList{})
+	SchemeBuilder.Register(&EnvSecretsManager{}, &ManagerList{})
 }
