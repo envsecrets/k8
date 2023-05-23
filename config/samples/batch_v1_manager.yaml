@@ -1,0 +1,12 @@
+apiVersion: batch.k8.envsecrets.dev/v1
+kind: Manager
+metadata:
+  labels:
+    app.kubernetes.io/name: manager
+    app.kubernetes.io/instance: manager-sample
+    app.kubernetes.io/part-of: k8
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: k8
+  name: manager-sample
+spec:
+  # TODO(user): Add fields here
